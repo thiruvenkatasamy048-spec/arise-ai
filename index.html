@@ -645,46 +645,4 @@
           } else if (q.includes('water') || q.includes('drink')) {
             this.assistantAnswer = `You have ${this.profile.waterGlasses || 0} glasses today. Drink a glass now and set a 1-hour reminder.`;
           } else {
-            this.assistantAnswer = "Suggestion: take a 10-minute movement break, then a 50-minute focus session.";
-          }
-          this.assistantQuery = '';
-        },
-        examplePlan() { return "09:00–09:50 Focus (topic A) → 10:00–10:50 Practice → 11:00–11:30 Review."; },
-        generateSuggestions() {
-          const s = [];
-          const studyMin = this.profile.studyMinutes ?? Math.round((this.profile.studyHours || 0) * 60);
-          if (studyMin >= 90) {
-            s.push({ id: 1, title: "📚 Focus Recommendation", text: `You've studied ${studyMin} minutes. Take a 10-minute movement break.`, actionLabel: "Start Break" });
-          } else {
-            s.push({ id: 1, title: "📚 Focus Tip", text: "Try a 50/10 focus cycle to push concentrated study with restful breaks.", actionLabel: "Start Focus" });
-          }
-          if ((this.profile.waterGlasses || 0) < 4) {
-            s.push({ id: 2, title: "💧 Hydration", text: `Only ${this.profile.waterGlasses} glasses today. Drink 250ml now.`, actionLabel: "Add Water" });
-          } else {
-            s.push({ id: 2, title: "💧 Hydration", text: "Hydration on track — keep it up!", actionLabel: "Nice" });
-          }
-          if ((this.profile.sleepHours || 0) < 7) {
-            s.push({ id: 3, title: "😴 Recovery", text: `You slept ${this.profile.sleepHours}h. Favor light activity and early bedtime.`, actionLabel: "Set Wind-down" });
-          } else {
-            s.push({ id: 3, title: "😴 Sleep", text: "Good sleep — schedule consistent bedtimes to reinforce this.", actionLabel: "Plan Sleep" });
-          }
-          this.suggestions = s;
-        },
-        refreshSuggestions() { this.generateSuggestions(); },
-        applySuggestion(s) {
-          if (s.actionLabel === 'Add Water') this.addWater(1);
-          else if (s.actionLabel === 'Start Break') { this.timer.mode = 'break'; this.resetTimer(false); this.startTimer(); }
-          else if (s.actionLabel === 'Start Focus') { this.timer.mode = 'focus'; this.resetTimer(false); this.startTimer(); }
-          else alert('Suggestion applied: ' + s.title);
-        },
-        openPlanner() { alert('Study Planner (prototype): I can implement this next if you like.'); },
-        get balanceState() {
-          if (this.score > 72) return '🟢 Balanced — keep it up';
-          if (this.score > 48) return '🟡 Needs Attention — small adjustments suggested';
-          return '🔴 Recovery Needed — prioritize rest & gentle activity';
-        },
-      }
-    }
-  </script>
-</body>
-</html>
+            this.assistantAnswer = 
