@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">ARISE AI — Student Wellness Companion</title>
+  <desc id="desc">ARISE AI social preview — balancing study and wellbeing</desc>
+
+  <defs>
+    <linearGradient id="spGrad" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <style>
+      .title { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; font-weight:700; fill: #ffffff; font-size:56px; }
+      .subtitle { font-family: Inter, system-ui; font-weight:500; fill: rgba(255,255,255,0.92); font-size:22px; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="630" fill="#08102a"/>
+  <rect x="60" y="80" rx="28" ry="28" width="1080" height="470" fill="url(#spGrad)" opacity="0.95"/>
+
+  <g transform="translate(120,150) scale(1.6)">
+    <rect width="96" height="96" rx="20" ry="20" fill="white" opacity="0.06"/>
+    <path d="M36 28 L44 28 L24 84 L16 84 Z" fill="#fff" opacity="0.98" transform="translate(8,0)" />
+    <path d="M56 28 L64 28 L44 84 L36 84 Z" fill="#fff" opacity="0.98" transform="translate(8,0)" />
+    <rect x="44" y="50" width="24" height="8" fill="rgba(255,255,255,0.06)" rx="2" ry="2"/>
+    <circle cx="78" cy="20" r="5.5" fill="#fff" opacity="0.98"/>
+  </g>
+
+  <g transform="translate(320,210)">
+    <text class="title">ARISE AI</text>
+    <text class="subtitle" y="56">Your AI-powered student wellness companion — Balance study, sleep & fitness</text>
+  </g>
+
+  <g transform="translate(320,330)">
+    <rect x="0" y="0" rx="10" ry="10" width="360" height="52" fill="rgba(255,255,255,0.12)"/>
+    <text x="22" y="34" font-family="Inter, system-ui" font-size="18" fill="#fff" font-weight="600">Live demo • Focus Mode • Smart recommendations</text>
+  </g>
+
+</svg>

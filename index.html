@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en" x-data="ariseApp()" x-init="init()" :class="dark ? 'dark' : ''">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ARISE AI — Student Wellness Companion (Demo)</title>
+
+  <!-- Tailwind via CDN (Play) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            indigoDeep: '#3b1f8a',
+            tealGlow: '#06b6d4',
+            sunrise: '#7c3aed'
+          },
+          boxShadow: { glass: '0 8px 30px rgba(16,24,40,0.12)' },
+          borderRadius: { 'xl2': '1.25rem' }
+        }
+      }
+    }
+  </script>
+
+  <!-- Alpine.js for interactivity -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+    .glass { backdrop-filter: blur(6px) saturate(120%); background-color: rgba(255,255,255,0.6); }
+    .dark .glass { background-color: rgba(5,7,12,0.52); }
+    .focus-ring:focus { outline: 3px solid rgba(124,58,237,0.18); outline-offset: 2px; }
+  </style>
+</head>
+<body class="antialiased bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 min-h-screen">
+
+  <!-- Top Nav / Hero -->
+  <header class="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="/assets/arise-logo-animated.svg" alt="ARISE logo" class="w-12 h-12" />
+      <div>
+        <div class="font-semibold text-lg">ARISE AI</div>
+        <div class="text-xs text-slate-500">student balance & performance</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button @click="toggleDark()" class="p-2 rounded-md focus-ring" aria-label="Toggle dark mode">
+        <template x-if="!dark">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-700" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM3.22 4.22a1 1 0 011.415 0L5.34 5.92a1 1 0 11-1.414 1.415L3.22 5.637a1 1 0 010-1.415zM14.66 15.66a1 1 0 011.415 0l.705.705a1 1 0 11-1.414 1.414l-.706-.705a1 1 0 010-1.414zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm14 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM3.22 15.78a1 1 0 010-1.415l.706-.705a1 1 0 111.414 1.415l-.706.705a1 1 0 01-1.414 0zM14.66 4.34a1 1 0 010 1.414l-.706.705A1 1 0 1112.54 4.64l.706-.705a1 1 0 011.414 0zM10 6a4 4 0 100 8 4 4 0 000-8z"/></svg>
+        </template>
+        <template x-if="dark">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293a8 8 0 01-10.586-10.586 8 8 0 1010.586 10.586z"/></svg>
+        </template>
+      </button>
+
+      <button @click="openOnboard()" class="px-3 py-2 rounded-lg bg-slate-900 text-white hidden sm:inline-block">Get Started</button>
+      <button @click="enableDemo()" class="px-3 py-2 rounded-lg border border-slate-200 text-sm">Demo Mode</button>
+    </div>
+  </header>
+
+  <!-- Hero / CTA -->
+  <section class="max-w-6xl mx-auto px-6 py-6 grid gap-6 md:grid-cols-2 items-center">
+    <div class="space-y-4">
+      <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">ARISE AI — your student balance companion</h1>
+      <p class="text-slate-600 max-w-xl">Not another generic tracker — a context-aware AI that understands your study load and recommends balanced actions for focus, health, and recovery.</p>
+
+      <div class="flex gap-3 mt-4">
+        <button @click="openOnboard()" class="px-5 py-3 rounded-lg bg-gradient-to-r from-sunrise to-tealGlow text-white font-semibold shadow">Get Started</button>
+        <button @click="enableDemo()" class="px-5 py-3 rounded-lg border border-slate-200">Try Demo</button>
+      </div>
+
+      <ul class="text-sm text-slate-500 flex gap-4 mt-3">
+        <li>• AI-guided study plans</li>
+        <li>• Focus Mode</li>
+        <li>• Hydration & sleep tracking</li>
+      </ul>
+    </div>
+
+    <!-- Visual / Compact Dashboard Preview -->
+    <div class="glass p-4 rounded-xl shadow-glass">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-xs text-slate-500">Good evening</div>
+          <div class="text-lg font-semibold" x-text="profile.name || 'Student'"></div>
+        </div>
+        <div class="flex items-center gap-4">
+          <!-- circular progress -->
+          <div class="relative w-28 h-28">
+            <svg viewBox="0 0 36 36" class="w-28 h-28">
+              <defs>
+                <linearGradient id="g2" x1="0" x2="100%">
+                  <stop offset="0%" stop-color="#7c3aed"></stop>
+                  <stop offset="100%" stop-color="#06b6d4"></stop>
+                </linearGradient>
+              </defs>
+              <path d="M18 2.0845
+                       a 15.9155 15.9155 0 0 1 0 31.831
+                       a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none" stroke="rgba(15,23,42,0.06)" stroke-width="3.5"></path>
+              <path :stroke-dasharray="`${score}, 100`" d="M18 2.0845
+                       a 15.9155 15.9155 0 0 1 0 31.831
+                       a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none" stroke="url(#g2)" stroke-linecap="round" stroke-width="3.5" transform="rotate(-90 18 18)"></path>
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="text-center">
+                <div class="text-xl font-bold" x-text="score"></div>
+                <div class="text-xs text-slate-500">ARISE</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-2 gap-3">
+        <div class="p-3 rounded-lg bg-white dark:bg-slate-900">
+          <div class="text-xs text-slate-500">Study</div>
+          <div class="font-semibold" x-text="formatTime(profile.studyMinutes) + ' / 4h'"></div>
+        </div>
+        <div class="p-3 rounded-lg bg-white dark:bg-slate-900">
+          <div class="text-xs text-slate-500">Activity</div>
+          <div class="font-semibold" x-text="steps + ' steps'"></div>
+        </div>
+        <div class="p-3 rounded-lg bg-white dark:bg-slate-900">
+          <div class="text-xs text-slate-500">Hydration</div>
+          <div class="font-semibold" x-text="profile.waterGlasses + ' / 8'"></div>
+        </div>
+        <div class="p-3 rounded-lg bg-white dark:bg-slate-900">
+          <div class="text-xs text-slate-500">Sleep</div>
+          <div class="font-semibold" x-text="profile.sleepHours + ' h'"></div>
+        </div>
+      </div>
+
+      <div class="mt-4 flex gap-2">
+        <button class="px-3 py-2 rounded-lg bg-indigoDeep text-white" @click="startFocusModal()">Start 25m Focus</button>
+        <button class="px-3 py-2 rounded-lg border" @click="openAssistant()">Talk to ARISE</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main content: Dashboard & Assistant -->
+  <main class="max-w-6xl mx-auto px-6 py-6 space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left: Score & profile -->
+      <section class="glass p-4 rounded-xl">
+        <div class="flex items-start gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sunrise to-tealGlow flex items-center justify-center text-white font-bold">AI</div>
+          <div>
+            <div class="text-sm text-slate-500">Welcome back</div>
+            <div class="text-lg font-semibold" x-text="profile.name || 'Student'"></div>
+            <div class="text-xs text-slate-500" x-text="profile.course ? profile.course + ' • ' + profile.year : ''"></div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <div class="text-xs text-slate-500">Balance state</div>
+          <div class="mt-2 text-sm font-medium" x-text="balanceState"></div>
+
+          <div class="mt-4 space-y-2">
+            <button class="w-full px-3 py-2 rounded-lg bg-indigoDeep text-white" @click="openAssistant()">Ask ARISE AI</button>
+            <button class="w-full px-3 py-2 rounded-lg border" @click="openPlanner()">Open Study Planner</button>
+            <button class="w-full px-3 py-2 rounded-lg bg-indigoDeep text-white" @click="startFocusModal()">Focus Mode</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Middle: Cards -->
+      <section class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="glass p-4 rounded-xl">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500">📚 Study</div>
+              <div class="text-lg font-semibold" x-text="formatTime(profile.studyMinutes) + ' / 4h'"></div>
+              <div class="text-sm text-slate-500 mt-1" x-text="focusSessions + ' focus sessions'"></div>
+            </div>
+            <div>
+              <button class="px-2 py-1 rounded-md border" @click="startFocusModal()">Start Focus</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass p-4 rounded-xl">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500">🏃 Activity</div>
+              <div class="text-lg font-semibold" x-text="steps + ' steps'"></div>
+              <div class="text-sm text-slate-500 mt-1" x-text="workoutStatus"></div>
+            </div>
+            <div>
+              <button class="px-2 py-1 rounded-md border" @click="logWorkout()">Log</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass p-4 rounded-xl">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500">💧 Hydration</div>
+              <div class="text-lg font-semibold" x-text="profile.waterGlasses + ' / 8 glasses'"></div>
+              <div class="text-sm text-slate-500 mt-1">Quick add</div>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button class="px-3 py-2 rounded-md bg-tealGlow text-white" @click="addWater(1)">+250 ml</button>
+              <button class="px-3 py-2 rounded-md border" @click="addWater(2)">+500 ml</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass p-4 rounded-xl">
+          <div>
+            <div class="text-xs text-slate-500">😴 Sleep</div>
+            <div class="text-lg font-semibold" x-text="profile.sleepHours + ' h'"></div>
+            <div class="text-sm text-slate-500 mt-1">Goal: 8h</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- AI Suggestions -->
+    <section class="glass p-4 rounded-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm font-semibold">AI Suggestions for you</div>
+          <div class="text-xs text-slate-500">Context-aware recommendations</div>
+        </div>
+        <div><button class="px-2 py-1 border rounded-md" @click="refreshSuggestions()">Refresh</button></div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <template x-for="s in suggestions" :key="s.id">
+          <div class="p-3 rounded-lg bg-white dark:bg-slate-900">
+            <div class="text-xs text-slate-500" x-text="s.title"></div>
+            <div class="font-medium mt-1" x-text="s.text"></div>
+            <div class="mt-3">
+              <button class="px-3 py-1 rounded-md bg-indigoDeep text-white" @click="applySuggestion(s)">{{ s.actionLabel }}</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-slate-500">
+    ARISE AI — for students • Prototype — demo only. Not medical advice.
+  </footer>
+
+  <!-- Onboarding Modal -->
+  <div x-show="onboard" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/40" @click="closeOnboard()"></div>
+    <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-xl p-6 glass">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-semibold">Create your ARISE profile</h3>
+          <p class="text-sm text-slate-500 mt-1">We only ask what we need to help you balance college life.</p>
+        </div>
+        <button class="p-2 rounded-md" @click="closeOnboard()">✕</button>
+      </div>
+
+      <form class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3" @submit.prevent="submitOnboard()">
+        <input class="p-2 rounded-md border focus-ring" placeholder="Name" x-model="profile.name" required />
+        <input class="p-2 rounded-md border focus-ring" placeholder="Age" type="number" x-model.number="profile.age" min="13" />
+        <input class="p-2 rounded-md border focus-ring" placeholder="Course / Dept" x-model="profile.course" />
+        <input class="p-2 rounded-md border focus-ring" placeholder="Year (e.g., 2nd Year)" x-model="profile.year" />
+        <input class="p-2 rounded-md border focus-ring" placeholder="Typical daily study hours" type="number" step="0.5" x-model.number="profile.studyHours" />
+        <input class="p-2 rounded-md border focus-ring" placeholder="Sleep hours" type="number" step="0.25" x-model.number="profile.sleepHours" />
+        <select class="p-2 rounded-md border focus-ring" x-model="profile.activityLevel">
+          <option>Low</option><option>Medium</option><option>High</option>
+        </select>
+        <select class="p-2 rounded-md border focus-ring" x-model.number="profile.waterGlasses">
+          <option :value="0">0 glasses</option>
+          <option :value="2">2</option>
+          <option :value="4">4</option>
+          <option :value="6">6</option>
+          <option :value="8">8</option>
+        </select>
+
+        <select class="p-2 rounded-md border focus-ring md:col-span-2" x-model="profile.goal">
+          <option>Improve academic productivity</option>
+          <option>Improve fitness</option>
+          <option>Reduce stress</option>
+          <option>Improve sleep</option>
+          <option>Build healthy habits</option>
+          <option>Maintain overall wellness</option>
+        </select>
+
+        <div class="md:col-span-2 flex justify-end gap-2 mt-2">
+          <button type="button" class="px-4 py-2 rounded-md border" @click="enableDemo()">Fill Demo</button>
+          <button type="submit" class="px-4 py-2 rounded-md bg-indigoDeep text-white">Create Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Assistant Drawer (simple) -->
+  <div x-show="assistantOpen" x-cloak class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/40" @click="assistantOpen=false"></div>
+    <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-xl p-4 glass">
+      <div class="flex items-center justify-between">
+        <div class="font-semibold">ARISE AI — Assistant</div>
+        <button class="p-2" @click="assistantOpen=false">✕</button>
+      </div>
+
+      <div class="mt-3">
+        <div class="space-y-2">
+          <textarea x-model="assistantQuery" class="w-full p-3 rounded-md border" placeholder="Ask something like: 'I have an exam tomorrow; help plan 3 hours of study'"></textarea>
+          <div class="flex gap-2 justify-end">
+            <button class="px-3 py-2 rounded-md border" @click="assistantQuery=''">Clear</button>
+            <button class="px-3 py-2 rounded-md bg-sunrise text-white" @click="askAssistant()">Ask ARISE</button>
+          </div>
+          <template x-if="assistantAnswer">
+            <div class="mt-3 p-3 rounded-md bg-slate-50 dark:bg-slate-800">
+              <div class="text-sm text-slate-500">ARISE suggests</div>
+              <div class="mt-2" x-text="assistantAnswer"></div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Focus Mode Modal -->
+  <div x-show="focusOpen" x-cloak class="fixed inset-0 z-60 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/40" @click="closeFocus()"></div>
+    <div class="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-xl p-6 glass">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-semibold">Focus Mode</h3>
+          <div class="text-xs text-slate-500">Pomodoro timer — 25/5 default. Session history saves locally.</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-slate-500">Auto-break</label>
+          <input type="checkbox" class="h-4 w-4" x-model="timer.autoStartBreak" />
+          <button class="p-2 rounded-md" @click="closeFocus()">✕</button>
+        </div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+        <div class="flex flex-col items-center gap-3">
+          <!-- Circular progress -->
+          <div class="relative w-44 h-44">
+            <svg viewBox="0 0 100 100" class="w-44 h-44">
+              <circle cx="50" cy="50" r="45" stroke="rgba(15,23,42,0.06)" stroke-width="8" fill="none"></circle>
+              <circle cx="50" cy="50" r="45" stroke="url(#fg)" stroke-width="8" stroke-linecap="round" stroke-dasharray="282.743" :stroke-dashoffset="282.743 - (progress/100)*282.743" transform="rotate(-90 50 50)" fill="none"></circle>
+              <defs><linearGradient id="fg"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <div class="text-3xl font-bold" x-text="displayTime"></div>
+              <div class="text-xs text-slate-500" x-text="timer.mode === 'focus' ? 'Focus' : 'Break'"></div>
+            </div>
+          </div>
+
+          <div class="flex gap-2 mt-2">
+            <button class="px-4 py-2 rounded-md bg-indigoDeep text-white" :disabled="timer.running" @click="startTimer()">Start</button>
+            <button class="px-4 py-2 rounded-md border" :disabled="!timer.running" @click="pauseTimer()">Pause</button>
+            <button class="px-4 py-2 rounded-md border" @click="resetTimer()">Reset</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-slate-500">Focus duration (minutes)</label>
+              <input type="number" class="w-full p-2 rounded-md border" min="1" x-model.number="timer.focusMinutes" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-500">Break duration (minutes)</label>
+              <input type="number" class="w-full p-2 rounded-md border" min="1" x-model.number="timer.breakMinutes" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-500">Cycles (optional)</label>
+              <input type="number" class="w-full p-2 rounded-md border" min="0" x-model.number="timer.cycles" />
+              <div class="text-xs text-slate-400 mt-1">0 = unlimited</div>
+            </div>
+
+            <div class="mt-3">
+              <div class="text-sm font-semibold">Focus History</div>
+              <template x-if="sessions.length === 0">
+                <div class="text-xs text-slate-500 mt-2">No sessions yet — start your first focus session.</div>
+              </template>
+              <template x-for="s in sessions.slice().reverse()" :key="s.id">
+                <div class="mt-2 p-2 rounded-md bg-slate-50 dark:bg-slate-800 text-sm">
+                  <div class="flex justify-between">
+                    <div x-text="s.mode === 'focus' ? 'Focus' : 'Break'"></div>
+                    <div class="text-slate-500 text-xs" x-text="new Date(s.endedAt).toLocaleString()"></div>
+                  </div>
+                  <div class="text-xs text-slate-500" x-text="s.duration + 'm'"></div>
+                </div>
+              </template>
+              <div class="mt-2 flex gap-2">
+                <button class="px-2 py-1 rounded-md border text-sm" @click="clearHistory()">Clear History</button>
+                <button class="px-2 py-1 rounded-md border text-sm" @click="exportHistory()">Export</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function ariseApp() {
+      return {
+        dark: false,
+        onboard: false,
+        assistantOpen: false,
+        assistantQuery: '',
+        assistantAnswer: '',
+        profile: { name: '', age: null, course: '', year: '', studyHours: 2, sleepHours: 7, activityLevel: 'Medium', waterGlasses: 2, goal: 'Maintain overall wellness' },
+        _score: 72,
+        steps: 4200,
+        focusSessions: 1,
+        workoutStatus: 'No workout logged',
+        suggestions: [],
+        focusOpen: false,
+        timer: {
+          mode: 'focus', // 'focus' | 'break'
+          focusMinutes: 25,
+          breakMinutes: 5,
+          cycles: 0, // 0 = unlimited
+          running: false,
+          remaining: 25 * 60,
+          total: 25 * 60,
+          autoStartBreak: true,
+          completedCycles: 0
+        },
+        timerIntervalId: null,
+        sessions: [], // persisted array of {id, mode, duration, endedAt}
+        init() {
+          this.dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          // load persisted sessions & timer prefs
+          const saved = localStorage.getItem('arise_focus_sessions');
+          if (saved) this.sessions = JSON.parse(saved);
+          const prefs = localStorage.getItem('arise_focus_timer_prefs');
+          if (prefs) {
+            const p = JSON.parse(prefs);
+            Object.assign(this.timer, p);
+            this.resetTimer(false);
+          } else {
+            this.resetTimer(false);
+          }
+          this.computeScore();
+          this.generateSuggestions();
+        },
+        toggleDark() { this.dark = !this.dark; },
+        enableDemo() {
+          this.profile = { name: 'Rhea', age: 21, course: 'Computer Science', year: '3rd Year', studyHours: 3.33, sleepHours: 6.75, activityLevel: 'Medium', waterGlasses: 5, goal: 'Improve academic productivity' };
+          this.steps = 4500;
+          this.focusSessions = 2;
+          this.workoutStatus = 'Warmup done';
+          this.computeScore();
+          this.generateSuggestions();
+        },
+        openOnboard() { this.onboard = true; },
+        closeOnboard() { this.onboard = false; },
+        submitOnboard() {
+          this.profile.studyMinutes = Math.round((this.profile.studyHours || 0) * 60);
+          this.profile.waterGlasses = Number(this.profile.waterGlasses) || 0;
+          this.onboard = false;
+          this.computeScore();
+          this.generateSuggestions();
+        },
+        computeScore() {
+          const study = Math.min(40, (this.profile.studyHours || 0) * 10);
+          const sleep = Math.min(30, (this.profile.sleepHours || 0) * 4);
+          const water = Math.min(20, (this.profile.waterGlasses || 0) * 2.5);
+          const activity = Math.min(10, (this.steps || 0) / 1000 * 2);
+          this._score = Math.round(study + sleep + water + activity);
+          this._score = Math.max(10, Math.min(98, this._score));
+        },
+        get score() { return this._score; },
+        set score(v) { this._score = v; },
+        formatTime(minutes) {
+          const mins = this.profile.studyMinutes ?? Math.round((this.profile.studyHours || 0) * 60);
+          const h = Math.floor(mins / 60);
+          const m = mins % 60;
+          return `${h}h ${m}m`;
+        },
+        addWater(glasses) {
+          this.profile.waterGlasses = (this.profile.waterGlasses || 0) + glasses;
+          this.computeScore();
+          this.generateSuggestions();
+        },
+        startFocusModal() {
+          this.focusOpen = true;
+          this.timer.mode = 'focus';
+          this.resetTimer(false);
+        },
+        closeFocus() {
+          this.focusOpen = false;
+          this.pauseTimer();
+        },
+        startTimer() {
+          if (!this.timer.total || this.timer.remaining <= 0) {
+            if (this.timer.mode === 'focus') {
+              this.timer.total = this.timer.focusMinutes * 60;
+              this.timer.remaining = this.timer.total;
+            } else {
+              this.timer.total = this.timer.breakMinutes * 60;
+              this.timer.remaining = this.timer.total;
+            }
+          }
+          if (this.timer.running) return;
+          this.timer.running = true;
+          localStorage.setItem('arise_focus_timer_prefs', JSON.stringify({
+            focusMinutes: this.timer.focusMinutes,
+            breakMinutes: this.timer.breakMinutes,
+            cycles: this.timer.cycles,
+            autoStartBreak: this.timer.autoStartBreak
+          }));
+          this.timerIntervalId = setInterval(() => {
+            if (!this.timer.running) return;
+            this.timer.remaining -= 1;
+            if (this.timer.remaining <= 0) {
+              this.completeSession();
+            }
+          }, 1000);
+        },
+        pauseTimer() {
+          this.timer.running = false;
+          if (this.timerIntervalId) { clearInterval(this.timerIntervalId); this.timerIntervalId = null; }
+        },
+        resetTimer(keepPrefs = true) {
+          this.pauseTimer();
+          if (this.timer.mode === 'focus') {
+            this.timer.total = this.timer.focusMinutes * 60;
+            this.timer.remaining = this.timer.total;
+          } else {
+            this.timer.total = this.timer.breakMinutes * 60;
+            this.timer.remaining = this.timer.total;
+          }
+        },
+        completeSession() {
+          this.pauseTimer();
+          const minutes = Math.round((this.timer.total) / 60);
+          this.sessions.push({
+            id: Date.now(),
+            mode: this.timer.mode,
+            duration: minutes,
+            endedAt: new Date().toISOString()
+          });
+          localStorage.setItem('arise_focus_sessions', JSON.stringify(this.sessions));
+          this.notify(`Finished ${this.timer.mode} session — ${minutes}m`);
+          this.beep();
+          if (this.timer.mode === 'focus') {
+            this.focusSessions = (this.focusSessions || 0) + 1;
+            this.timer.completedCycles = (this.timer.completedCycles || 0) + 1;
+            if (this.timer.autoStartBreak) {
+              this.timer.mode = 'break';
+              this.resetTimer();
+              this.startTimer();
+            } else {
+              this.timer.mode = 'break';
+              this.resetTimer();
+            }
+          } else {
+            if (this.timer.cycles > 0 && this.timer.completedCycles >= this.timer.cycles) {
+              this.notify('All cycles complete. Great job!');
+            }
+            if (this.timer.autoStartBreak) {
+              this.timer.mode = 'focus';
+              this.resetTimer();
+              this.startTimer();
+            } else {
+              this.timer.mode = 'focus';
+              this.resetTimer();
+            }
+          }
+          this.computeScore();
+          this.generateSuggestions();
+        },
+        beep() {
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(880, ctx.currentTime);
+            g.gain.setValueAtTime(0.0001, ctx.currentTime);
+            o.connect(g);
+            g.connect(ctx.destination);
+            g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+            o.start();
+            setTimeout(() => {
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+              setTimeout(()=> o.stop(), 450);
+            }, 350);
+          } catch (e) { }
+        },
+        notify(text) {
+          if (window.Notification && Notification.permission === "granted") {
+            new Notification("ARISE Focus", { body: text });
+          } else if (window.Notification && Notification.permission !== "denied") {
+            Notification.requestPermission().then(p => {
+              if (p === "granted") new Notification("ARISE Focus", { body: text });
+            });
+          } else {
+            alert(text);
+          }
+        },
+        get displayTime() {
+          const rem = this.timer.remaining || 0;
+          const m = Math.floor(rem / 60).toString().padStart(2, '0');
+          const s = Math.floor(rem % 60).toString().padStart(2, '0');
+          return `${m}:${s}`;
+        },
+        get progress() {
+          const t = this.timer.total || 1;
+          const rem = this.timer.remaining || 0;
+          return Math.round(((t - rem) / t) * 100);
+        },
+        clearHistory() {
+          if (!confirm('Clear focus history?')) return;
+          this.sessions = [];
+          localStorage.removeItem('arise_focus_sessions');
+        },
+        exportHistory() {
+          const data = JSON.stringify(this.sessions, null, 2);
+          const blob = new Blob([data], {type:'application/json'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'arise_focus_history.json';
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+        startQuickWalk() { this.steps += 300; this.workoutStatus = 'Quick walk +300 steps'; this.computeScore(); this.generateSuggestions(); },
+        logWorkout() { this.workoutStatus = 'Workout logged (demo)'; this.steps += 2000; this.computeScore(); this.generateSuggestions(); },
+        openAssistant() { this.assistantOpen = true; },
+        askAssistant() {
+          if (!this.assistantQuery) { this.assistantAnswer = "Try a prompt: 'I have an exam tomorrow — build a 3-hour study plan.'"; return; }
+          const q = this.assistantQuery.toLowerCase();
+          if (q.includes('exam') || q.includes('plan')) {
+            this.assistantAnswer = `You have ${this.profile.studyHours || 0}h today. For exam prep: split into 50min focused blocks with 10min breaks. Example: ${this.examplePlan()}`;
+          } else if (q.includes('tired') || q.includes('sleep')) {
+            if ((this.profile.sleepHours || 0) < 7) {
+              this.assistantAnswer = "You're running low on sleep. Prioritize a short walk and a relaxing 15-minute wind-down tonight. Avoid heavy study late night.";
+            } else {
+              this.assistantAnswer = "Try a 10-minute movement break and 5-minute breathing exercise.";
+            }
+          } else if (q.includes('water') || q.includes('drink')) {
+            this.assistantAnswer = `You have ${this.profile.waterGlasses || 0} glasses today. Drink a glass now and set a 1-hour reminder.`;
+          } else {
+            this.assistantAnswer = "Suggestion: take a 10-minute movement break, then a 50-minute focus session.";
+          }
+          this.assistantQuery = '';
+        },
+        examplePlan() { return "09:00–09:50 Focus (topic A) → 10:00–10:50 Practice → 11:00–11:30 Review."; },
+        generateSuggestions() {
+          const s = [];
+          const studyMin = this.profile.studyMinutes ?? Math.round((this.profile.studyHours || 0) * 60);
+          if (studyMin >= 90) {
+            s.push({ id: 1, title: "📚 Focus Recommendation", text: `You've studied ${studyMin} minutes. Take a 10-minute movement break.`, actionLabel: "Start Break" });
+          } else {
+            s.push({ id: 1, title: "📚 Focus Tip", text: "Try a 50/10 focus cycle to push concentrated study with restful breaks.", actionLabel: "Start Focus" });
+          }
+          if ((this.profile.waterGlasses || 0) < 4) {
+            s.push({ id: 2, title: "💧 Hydration", text: `Only ${this.profile.waterGlasses} glasses today. Drink 250ml now.`, actionLabel: "Add Water" });
+          } else {
+            s.push({ id: 2, title: "💧 Hydration", text: "Hydration on track — keep it up!", actionLabel: "Nice" });
+          }
+          if ((this.profile.sleepHours || 0) < 7) {
+            s.push({ id: 3, title: "😴 Recovery", text: `You slept ${this.profile.sleepHours}h. Favor light activity and early bedtime.`, actionLabel: "Set Wind-down" });
+          } else {
+            s.push({ id: 3, title: "😴 Sleep", text: "Good sleep — schedule consistent bedtimes to reinforce this.", actionLabel: "Plan Sleep" });
+          }
+          this.suggestions = s;
+        },
+        refreshSuggestions() { this.generateSuggestions(); },
+        applySuggestion(s) {
+          if (s.actionLabel === 'Add Water') this.addWater(1);
+          else if (s.actionLabel === 'Start Break') { this.timer.mode = 'break'; this.resetTimer(false); this.startTimer(); }
+          else if (s.actionLabel === 'Start Focus') { this.timer.mode = 'focus'; this.resetTimer(false); this.startTimer(); }
+          else alert('Suggestion applied: ' + s.title);
+        },
+        openPlanner() { alert('Study Planner (prototype): I can implement this next if you like.'); },
+        get balanceState() {
+          if (this.score > 72) return '🟢 Balanced — keep it up';
+          if (this.score > 48) return '🟡 Needs Attention — small adjustments suggested';
+          return '🔴 Recovery Needed — prioritize rest & gentle activity';
+        },
+      }
+    }
+  </script>
+</body>
+</html>

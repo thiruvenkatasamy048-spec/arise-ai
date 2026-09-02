@@ -1,0 +1,14 @@
+{
+  "name": "ARISE AI",
+  "short_name": "ARISE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08102a",
+  "theme_color": "#3b1f8a",
+  "icons": [
+    { "src": "/dist-icons/arise-logo-animated-128x128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "/dist-icons/arise-logo-animated-256x256.png", "sizes": "256x256", "type": "image/png" },
+    { "src": "/dist-icons/arise-logo-animated-512x512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/dist-icons/arise-mark-favicon-64x64.png", "sizes": "64x64", "type": "image/png" }
+  ]
+}
